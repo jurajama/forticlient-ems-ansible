@@ -1,0 +1,43 @@
+# Secrets / credentials (EMS URL and admin login live in .env)
+.env
+.env.*
+!.env.example
+*.vault
+vault_pass*
+*.pem
+*.key
+
+# Raw API captures and probe output: may contain tokens, PSKs, license ids.
+# Only reviewed, sanitized fixtures belong in tests/fixtures/.
+captures/
+probe_output/
+*.har
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Ansible / ansible-test
+*.retry
+.ansible/
+tests/output/
+.cache/
+
+# Built collection artifacts
+*.tar.gz
+!tests/fixtures/**/*.tar.gz
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store

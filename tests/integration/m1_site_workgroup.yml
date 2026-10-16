@@ -1,0 +1,107 @@
+# Maintainer-run integration test against a real EMS. Creates/deletes only the site `siteb`.
+# Usage: set -a; . ./.env; set +a; ANSIBLE_COLLECTIONS_PATH=~/collections ansible-playbook tests/integration/m1_site_workgroup.yml
+- hosts: localhost
+  gather_facts: false
+  vars:
+    site: siteb
+  tasks:
+    - name: info
+      jurajama.forticlient_ems.ems_info:
+        validate_certs: false
+        gather_subset: [sites]
+      register: info
+    - ansible.builtin.assert:
+        that:
+          - info.version.startswith('7.4')
+          - site not in (info.sites | map(attribute='display_name') | list)
+
+    - block:
+        - name: check mode create
+          jurajama.forticlient_ems.ems_site: { name: "{{ site }}", validate_certs: false }
+          check_mode: true
+          register: c0
+        - ansible.builtin.assert: { that: [c0.changed] }
+        - jurajama.forticlient_ems.ems_info: { validate_certs: false, gather_subset: [sites] }
+          register: i0
+        - ansible.builtin.assert: { that: ["site not in (i0.sites | map(attribute='display_name') | list)"] }
+
+        - name: create
+          jurajama.forticlient_ems.ems_site: { name: "{{ site }}", validate_certs: false }
+          register: s1
+        - ansible.builtin.assert: { that: [s1.changed, s1.id is defined] }
+        - name: create again
+          jurajama.forticlient_ems.ems_site: { name: "{{ site }}", validate_certs: false }
+          register: s2
+        - ansible.builtin.assert: { that: [not s2.changed, s2.id == s1.id] }
+
+        - name: workgroup check mode
+          jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: VPN-group-1, validate_certs: false }
+          check_mode: true
+          register: w0
+        - ansible.builtin.assert: { that: [w0.changed] }
+        - name: workgroup
+          jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: VPN-group-1, validate_certs: false }
+          register: w1
+        - ansible.builtin.assert: { that: [w1.changed, "w1.workgroup.full_path == 'All Groups/VPN-group-1'"] }
+        - jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: VPN-group-1, validate_certs: false }
+          register: w2
+        - ansible.builtin.assert: { that: [not w2.changed, w2.workgroup.id == w1.workgroup.id] }
+        - name: nested workgroup
+          jurajama.forticlient_ems.ems_workgroup:
+            site: "{{ site }}"
+            name: child
+            parent: All Groups/VPN-group-1
+            validate_certs: false
+          register: w3
+        - ansible.builtin.assert: { that: [w3.changed, "w3.workgroup.full_path == 'All Groups/VPN-group-1/child'"] }
+        - jurajama.forticlient_ems.ems_workgroup:
+            site: "{{ site }}"
+            name: child
+            parent: All Groups/VPN-group-1
+            validate_certs: false
+          register: w4
+        - ansible.builtin.assert: { that: [not w4.changed] }
+        - name: unknown parent fails
+          jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: x, parent: nope, validate_certs: false }
+          register: w5
+          failed_when: w5 is not failed
+        - name: unknown site fails
+          jurajama.forticlient_ems.ems_workgroup: { site: nosuchsite, name: x, validate_certs: false }
+          register: w6
+          failed_when: w6 is not failed
+        - name: delete nested then parent
+          jurajama.forticlient_ems.ems_workgroup:
+            site: "{{ site }}"
+            name: child
+            parent: All Groups/VPN-group-1
+            state: absent
+            validate_certs: false
+          register: w7
+        - jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: VPN-group-1, state: absent, validate_certs: false }
+          register: w8
+        - ansible.builtin.assert: { that: [w7.changed, w8.changed] }
+        - jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: VPN-group-1, state: absent, validate_certs: false }
+          register: w9
+        - ansible.builtin.assert: { that: [not w9.changed] }
+        - name: refuse built-in
+          jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: Other Endpoints, state: absent, validate_certs: false }
+          register: w10
+          failed_when: w10 is not failed
+        - name: built-in present is unchanged
+          jurajama.forticlient_ems.ems_workgroup: { site: "{{ site }}", name: Other Endpoints, validate_certs: false }
+          register: w11
+        - ansible.builtin.assert: { that: [not w11.changed] }
+      always:
+        - name: delete site check mode
+          jurajama.forticlient_ems.ems_site: { name: "{{ site }}", state: absent, validate_certs: false }
+          check_mode: true
+        - name: delete site
+          jurajama.forticlient_ems.ems_site: { name: "{{ site }}", state: absent, validate_certs: false }
+          register: d1
+        - jurajama.forticlient_ems.ems_site: { name: "{{ site }}", state: absent, validate_certs: false }
+          register: d2
+        - ansible.builtin.assert: { that: [not d2.changed] }
+        - name: refuse deleting Default
+          jurajama.forticlient_ems.ems_site: { name: Default, state: absent, validate_certs: false }
+          register: d3
+          failed_when: d3 is not failed

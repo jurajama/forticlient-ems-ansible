@@ -1,0 +1,13 @@
+namespace: jurajama
+name: forticlient_ems
+version: 0.1.0
+readme: README.md
+authors:
+  - jurajama
+description: Manage FortiClient EMS (multi-site) configuration.
+license:
+  - GPL-3.0-or-later
+tags:
+  - fortinet
+  - forticlient
+dependencies: {}
