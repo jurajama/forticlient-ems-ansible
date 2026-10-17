@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  mock-ems:
+    name: Unit and mock EMS tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ansible_collections/jurajama/forticlient_ems
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: python -m pip install pytest requests ansible-core
+
+      - name: Run tests (unit, modules and playbook against the mock EMS server)
+        working-directory: ansible_collections/jurajama/forticlient_ems
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m pytest -p no:cacheprovider tests/unit -v
