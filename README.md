@@ -20,7 +20,8 @@ The unit tests include end-to-end tests (`tests/unit/test_modules_mock_ems.py`) 
 modules and `EMSClient` against a simulated EMS server (`tests/mock_ems/server.py`: stdlib HTTPS
 server with a throw-away self-signed certificate, needs `openssl`; sites, workgroups, async
 operations, session/CSRF checks). It starts on a free port per test, so no real EMS is needed.
-To poke at it by hand: `python3 tests/mock_ems/server.py 8443` (login `admin` / `admin`).
+`tests/unit/test_playbook_mock_ems.py` also runs the integration playbook against it (the playbook
+reads an optional `EMS_PORT`). To poke at it by hand: `python3 tests/mock_ems/server.py 8443` (login `admin` / `admin`).
 
 `ansible-test` does not follow symlinks; run sanity from a copy:
 

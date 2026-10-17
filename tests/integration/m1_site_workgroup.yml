@@ -1,7 +1,14 @@
 # Maintainer-run integration test against a real EMS. Creates/deletes only the site `siteb`.
 # Usage: set -a; . ./.env; set +a; ANSIBLE_COLLECTIONS_PATH=~/collections ansible-playbook tests/integration/m1_site_workgroup.yml
+# Also runs against the simulated server (tests/mock_ems): set EMS_PORT (plus EMS_SERVER=127.0.0.1,
+# EMS_USERNAME=admin, EMS_PASSWORD=admin); tests/unit/test_playbook_mock_ems.py does exactly that.
 - hosts: localhost
   gather_facts: false
+  module_defaults:
+    jurajama.forticlient_ems.ems_info: &ems_defaults
+      port: "{{ lookup('ansible.builtin.env', 'EMS_PORT') | default(443, true) | int }}"
+    jurajama.forticlient_ems.ems_site: *ems_defaults
+    jurajama.forticlient_ems.ems_workgroup: *ems_defaults
   vars:
     site: siteb
   tasks:
