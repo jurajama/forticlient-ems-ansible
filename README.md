@@ -29,3 +29,5 @@ reads an optional `EMS_PORT`). To poke at it by hand: `python3 tests/mock_ems/se
 mkdir -p /tmp/ac/ansible_collections/jurajama && cp -r . /tmp/ac/ansible_collections/jurajama/forticlient_ems
 (cd /tmp/ac/ansible_collections/jurajama/forticlient_ems && ansible-test sanity --python 3.12)
 ```
+
+The GitHub workflow `.github/workflows/tests.yml` runs these tests (including the mock EMS ones) on every push to `main` and on pull requests.
