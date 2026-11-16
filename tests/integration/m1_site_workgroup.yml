@@ -5,10 +5,8 @@
 - hosts: localhost
   gather_facts: false
   module_defaults:
-    jurajama.forticlient_ems.ems_info: &ems_defaults
+    group/jurajama.forticlient_ems.all:
       port: "{{ lookup('ansible.builtin.env', 'EMS_PORT') | default(443, true) | int }}"
-    jurajama.forticlient_ems.ems_site: *ems_defaults
-    jurajama.forticlient_ems.ems_workgroup: *ems_defaults
   vars:
     site: siteb
   tasks:

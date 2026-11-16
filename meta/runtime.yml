@@ -1,2 +1,7 @@
 ---
 requires_ansible: ">=2.15.0"
+action_groups:
+  all:
+    - ems_info
+    - ems_site
+    - ems_workgroup
