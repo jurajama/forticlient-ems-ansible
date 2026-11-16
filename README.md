@@ -90,7 +90,7 @@ Every module accepts the same connection parameters. Each one except `port` and 
 | `validate_certs` | `EMS_VALIDATE_CERTS` | `true` | Validate the EMS TLS certificate. |
 | `timeout` | – | `30` | HTTP timeout in seconds. |
 
-Rather than repeating them on every task, set them once with `module_defaults`, and keep the password in Ansible Vault:
+Rather than repeating them on every task, set them once with `module_defaults` using the collection's `all` action group (it covers every module), and keep the password in Ansible Vault:
 
 ```yaml
 - hosts: localhost
@@ -98,12 +98,10 @@ Rather than repeating them on every task, set them once with `module_defaults`, 
   vars_files:
     - secrets.yml            # ansible-vault encrypted, defines vault_ems_password
   module_defaults:
-    jurajama.forticlient_ems.ems_info: &ems
+    group/jurajama.forticlient_ems.all:
       host: ems.example.com
       username: admin
       password: "{{ vault_ems_password }}"
-    jurajama.forticlient_ems.ems_site: *ems
-    jurajama.forticlient_ems.ems_workgroup: *ems
   tasks:
     - jurajama.forticlient_ems.ems_info:
 ```
